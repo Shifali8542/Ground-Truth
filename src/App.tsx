@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Sidebar } from './components/layout/Sidebar';
 import { MainContent } from './components/layout/MainContent';
-import { fetchAllRuns, fetchRunDetails, fetchFileDiff, fetchIndentationSummary, fetchRunDetailPage } from './api';
+import { fetchAllRuns, fetchRunDetails, fetchFileDiff, fetchIndentationSummary, fetchRunDetailPage, fetchIndentationDetailPage } from './api';
 import type { SidebarState, ComparisonRun, FileResult, FileDiffRow, IndentationSummaryData, RunDetailPageResult } from './types';
 
 function App() {
@@ -38,6 +38,7 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [runDetailsData, setRunDetailsData] = useState<RunDetailPageResult[]>([]); // <-- NEW
   const [detailRunId, setDetailRunId] = useState<string | null>(null);
+  const [indentationDetailRunId, setIndentationDetailRunId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadRuns() {
@@ -56,9 +57,9 @@ function App() {
     loadRuns();
   }, []);
 
-  useEffect(() => {
-    if (detailRunId) {
-      setState(prev => ({ ...prev, currentView: 'runDetails' }));
+ useEffect(() => {
+    if (detailRunId || indentationDetailRunId) {
+      setState(prev => ({ ...prev, currentView: 'runDetails' })); 
       return;
     }
 
@@ -71,7 +72,7 @@ function App() {
     } else if (state.showFinalSummary) {
       setState(prev => ({ ...prev, currentView: 'finalSummary' }));
     }
-  }, [state.showFinalSummary, state.showIndentationResult, state.showRunSummary, state.showFileDiff, state.selectedRunId, state.selectedFileName, state.selectedFileSuffix, detailRunId]);
+  }, [state.showFinalSummary, state.showIndentationResult, state.showRunSummary, state.showFileDiff, state.selectedRunId, state.selectedFileName, state.selectedFileSuffix, detailRunId, indentationDetailRunId]);
 
   useEffect(() => {
     if (!state.selectedRunId) {
@@ -121,7 +122,6 @@ function App() {
 
     async function loadRunDetailsPage() {
       try {
-        // Add null check here - TypeScript knows detailRunId is not null inside this function
         if (detailRunId) {
           const details = await fetchRunDetailPage(detailRunId);
           setRunDetailsData(details);
@@ -133,6 +133,26 @@ function App() {
 
     loadRunDetailsPage();
   }, [detailRunId]);
+
+  useEffect(() => { 
+    if (!indentationDetailRunId) {
+      setRunDetailsData([]);
+      return;
+    }
+
+    async function loadIndentationDetailsPage() {
+      try {
+        if (indentationDetailRunId) {
+          const details = await fetchIndentationDetailPage(indentationDetailRunId);
+          setRunDetailsData(details);
+        }
+      } catch (error) {
+        console.error('Failed to fetch indentation detail page:', error);
+      }
+    }
+
+    loadIndentationDetailsPage();
+  }, [indentationDetailRunId]); 
 
   return (
     <div className="app">
@@ -154,6 +174,8 @@ function App() {
         runDetailsData={runDetailsData}
         detailRunId={detailRunId}
         setDetailRunId={setDetailRunId}
+        indentationDetailRunId={indentationDetailRunId}
+        setIndentationDetailRunId={setIndentationDetailRunId}
       />
     </div>
   );

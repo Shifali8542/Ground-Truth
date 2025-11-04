@@ -7,9 +7,10 @@ import './IndentationSummaryTable.scss';
 
 interface IndentationSummaryTableProps {
     runs: IndentationSummaryData[];
+    onRunClick: (runId: string) => void;
 }
 
-export function IndentationSummaryTable({ runs }: IndentationSummaryTableProps) {
+export function IndentationSummaryTable({ runs, onRunClick }: IndentationSummaryTableProps) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -45,8 +46,11 @@ export function IndentationSummaryTable({ runs }: IndentationSummaryTableProps) 
                                 </TableRow>
                             ) : (
                                 runs.map((run, index) => (
-                                    <TableRow key={index}>
-                                        <TableCell>
+                                    <TableRow key={run.Date_Time}>
+                                        <TableCell
+                                            className="w-[180px] cursor-pointer hover:bg-muted/70"
+                                            onClick={() => onRunClick(run.Date_Time)}
+                                        >
                                             <div className="flex flex-col items-start space-y-0.5">
                                                 <span className="font-semibold text-primary">
                                                     {formatRunDateTime(run.Date_Time).split(' at ')[0]}

@@ -72,3 +72,13 @@ export async function fetchRunDetailPage(runId: string): Promise<RunDetailPageRe
 
   return response.json();
 }
+
+export async function fetchIndentationDetailPage(runId: string): Promise<RunDetailPageResult[]> {
+  const response = await fetch(`${API_BASE_URL}api/indent/runs/${runId}/`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch indentation detail page for ${runId}`);
+  }
+
+  return response.json();
+}

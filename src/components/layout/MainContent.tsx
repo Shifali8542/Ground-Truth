@@ -18,6 +18,8 @@ interface MainContentProps {
   runDetailsData: RunDetailPageResult[];
   detailRunId: string | null;
   setDetailRunId: (runId: string | null) => void;
+  indentationDetailRunId: string | null;
+  setIndentationDetailRunId: (runId: string | null) => void;
 }
 
 export function MainContent({
@@ -30,6 +32,8 @@ export function MainContent({
   runDetailsData,
   detailRunId,
   setDetailRunId,
+  indentationDetailRunId,
+  setIndentationDetailRunId,
 }: MainContentProps) {
 
   const handleRunDetailsClick = (runId: string) => {
@@ -38,29 +42,32 @@ export function MainContent({
 
   const handleGoBack = () => {
     setDetailRunId(null);
+    setIndentationDetailRunId(null);
   };
 
-  if (detailRunId) {
-  return (
-    <main className={`main-content ${isSidebarOpen ? '' : 'is-collapsed'}`}>
-      <div className="content-wrapper">
-        {runDetailsData.length > 0 ? (
-          <RunDetailsPage 
-            data={runDetailsData} 
-            runId={detailRunId} 
-            onGoBack={handleGoBack}
-            state={state}
-          />
-        ) : (
-          <div className="loading-state">
-            <div className="spinner"></div>
-            <p>Loading run details...</p>
-          </div>
-        )}
-      </div>
-    </main>
-  );
-}
+  if (detailRunId || indentationDetailRunId) { 
+    const currentRunId = detailRunId || indentationDetailRunId;
+
+    return (
+      <main className={`main-content ${isSidebarOpen ? '' : 'is-collapsed'}`}>
+        <div className="content-wrapper">
+          {runDetailsData.length > 0 ? (
+            <RunDetailsPage 
+              data={runDetailsData} 
+              runId={currentRunId}
+              onGoBack={handleGoBack}
+              state={state}
+            />
+          ) : (
+            <div className="loading-state">
+              <div className="spinner"></div>
+              <p>Loading run details...</p>
+            </div>
+          )}
+        </div>
+      </main>
+    );
+  }
 
 
   return (
@@ -79,9 +86,12 @@ export function MainContent({
             </div>
           )}
 
-          {state.currentView === 'indentationResult' && state.showIndentationResult && (
+          {state.currentView === 'indentationResult' && state.showIndentationResult && ( // <-- UPDATED BLOCK
             <div className="content-section">
-              <IndentationSummaryTable runs={indentationResults} />
+              <IndentationSummaryTable 
+                runs={indentationResults} 
+                onRunClick={setIndentationDetailRunId}
+              />
             </div>
           )}
 

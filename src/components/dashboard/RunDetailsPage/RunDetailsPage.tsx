@@ -22,6 +22,10 @@ interface RunDetailsPageProps {
 }
 
 export function RunDetailsPage({ data, runId, onGoBack, state }: RunDetailsPageProps) {
+  
+  // 🚨 DEBUGGING: Log the full data array received
+  console.log("RunDetailsPage Data Received:", data);
+
   if (!runId || data.length === 0) {
     return (
       <motion.div 
@@ -37,18 +41,28 @@ export function RunDetailsPage({ data, runId, onGoBack, state }: RunDetailsPageP
       </motion.div>
     );
   }
+  
+  // Check for a unique indentation field to determine the view type
+  const isIndentationDetails = data.some((item: any) => 'total_rows' in item);
 
-  // Calculate high-level summary metadata
+  // Calculate high-level summary metadata (Content Comparison)
+  // We use type 'any' for data.reduce temporarily to accommodate both data structures
   const totalFiles = data.length;
-  const totalParagraphs = data.reduce((sum, item) => sum + item.total_paragraphs, 0);
-  const totalMatches = data.reduce((sum, item) => sum + item.content_matches, 0);
-  const totalTPSuperscript = data.reduce((sum, item) => sum + item.TP_superscript, 0);
-  const totalFPSuperscript = data.reduce((sum, item) => sum + item.FP_superscript, 0);
-  const totalFNSuperscript = data.reduce((sum, item) => sum + item.FN_superscript, 0);
-  const totalSuperscriptMatches = data.reduce((sum, item) => sum + item.superscript_matches, 0);
+  const totalParagraphs = data.reduce((sum, item: any) => sum + (item.total_paragraphs || 0), 0);
+  const totalMatches = data.reduce((sum, item: any) => sum + (item.content_matches || 0), 0);
+  const totalTPSuperscript = data.reduce((sum, item: any) => sum + (item.TP_superscript || 0), 0);
+  const totalFPSuperscript = data.reduce((sum, item: any) => sum + (item.FP_superscript || 0), 0);
+  const totalFNSuperscript = data.reduce((sum, item: any) => sum + (item.FN_superscript || 0), 0);
+  const totalSuperscriptMatches = data.reduce((sum, item: any) => sum + (item.superscript_matches || 0), 0);
   
   const contentMatchOverall = totalParagraphs > 0 ? (totalMatches / totalParagraphs) * 100 : 0;
   const superscriptMatchOverall = totalParagraphs > 0 ? (totalSuperscriptMatches / totalParagraphs) * 100 : 0;
+
+  // Calculate high-level summary metadata (Indentation Comparison)
+  const totalRows = data.reduce((sum, item: any) => sum + (item.total_rows || 0), 0);
+  // NOTE: Calculating overall row match percentage requires more complex logic (weighted average), 
+  // but for a simple display, we'll use a placeholder or sum the available values.
+  const overallIndentationMatchPercentage = data.reduce((sum, item: any) => sum + (item.row_match_percentage || 0), 0) / data.length;
 
   // Function to determine color based on match percentage
   const getMatchColor = (percentage: number) => {
@@ -64,6 +78,7 @@ export function RunDetailsPage({ data, runId, onGoBack, state }: RunDetailsPageP
   };
 
   const formattedDateTime = runId ? formatRunDateTime(runId) : 'N/A';
+  const currentRunId = runId || state.selectedRunId;
 
   return (
     <motion.div
@@ -79,7 +94,9 @@ export function RunDetailsPage({ data, runId, onGoBack, state }: RunDetailsPageP
           <div className="header-title-section">
             <FileText className="h-8 w-8 text-primary" />
             <div>
-              <h2 className="header-title">Run Details</h2>
+              <h2 className="header-title">
+                {isIndentationDetails ? 'Indentation Run Details' : 'Content Run Details'}
+              </h2>
               <p className="header-subtitle">{formattedDateTime}</p>
             </div>
           </div>
@@ -102,79 +119,122 @@ export function RunDetailsPage({ data, runId, onGoBack, state }: RunDetailsPageP
           </CardContent>
         </Card>
 
-        <Card className="summary-card">
-          <CardHeader className="summary-card-header">
-            <FileText className="summary-icon text-purple-500" />
-            <CardTitle className="summary-card-title">Total Paragraphs</CardTitle>
-          </CardHeader>
-          <CardContent className="summary-card-content">
-            <p className="summary-value">{totalParagraphs}</p>
-            <p className="summary-label">Paragraphs Analyzed</p>
-          </CardContent>
-        </Card>
+        {/* Conditional Summary Cards */}
+        {!isIndentationDetails ? (
+          <>
+            <Card className="summary-card">
+              <CardHeader className="summary-card-header">
+                <FileText className="summary-icon text-purple-500" />
+                <CardTitle className="summary-card-title">Total Paragraphs</CardTitle>
+              </CardHeader>
+              <CardContent className="summary-card-content">
+                <p className="summary-value">{totalParagraphs}</p>
+                <p className="summary-label">Paragraphs Analyzed</p>
+              </CardContent>
+            </Card>
 
-        <Card className={`summary-card highlight-card ${getMatchColor(contentMatchOverall)}`}>
-          <CardHeader className="summary-card-header">
-            <CheckCircle2 className="summary-icon" />
-            <CardTitle className="summary-card-title">Content Match</CardTitle>
-          </CardHeader>
-          <CardContent className="summary-card-content">
-            <p className="summary-value">{contentMatchOverall.toFixed(2)}%</p>
-            <p className="summary-label">{totalMatches} / {totalParagraphs} matches</p>
-          </CardContent>
-        </Card>
+            <Card className={`summary-card highlight-card ${getMatchColor(contentMatchOverall)}`}>
+              <CardHeader className="summary-card-header">
+                <CheckCircle2 className="summary-icon" />
+                <CardTitle className="summary-card-title">Content Match</CardTitle>
+              </CardHeader>
+              <CardContent className="summary-card-content">
+                <p className="summary-value">{contentMatchOverall.toFixed(2)}%</p>
+                <p className="summary-label">{totalMatches} / {totalParagraphs} matches</p>
+              </CardContent>
+            </Card>
 
-        <Card className={`summary-card highlight-card ${getMatchColor(superscriptMatchOverall)}`}>
-          <CardHeader className="summary-card-header">
-            <CheckCircle2 className="summary-icon" />
-            <CardTitle className="summary-card-title">Superscript Match</CardTitle>
-          </CardHeader>
-          <CardContent className="summary-card-content">
-            <p className="summary-value">{superscriptMatchOverall.toFixed(2)}%</p>
-            <p className="summary-label">{totalSuperscriptMatches} / {totalParagraphs} matches</p>
-          </CardContent>
-        </Card>
+            <Card className={`summary-card highlight-card ${getMatchColor(superscriptMatchOverall)}`}>
+              <CardHeader className="summary-card-header">
+                <CheckCircle2 className="summary-icon" />
+                <CardTitle className="summary-card-title">Superscript Match</CardTitle>
+              </CardHeader>
+              <CardContent className="summary-card-content">
+                <p className="summary-value">{superscriptMatchOverall.toFixed(2)}%</p>
+                <p className="summary-label">{totalSuperscriptMatches} / {totalParagraphs} matches</p>
+              </CardContent>
+            </Card>
+          </>
+        ) : (
+          <>
+            <Card className="summary-card">
+              <CardHeader className="summary-card-header">
+                <FileText className="summary-icon text-purple-500" />
+                <CardTitle className="summary-card-title">Total Rows</CardTitle>
+              </CardHeader>
+              <CardContent className="summary-card-content">
+                <p className="summary-value">{totalRows}</p>
+                <p className="summary-label">Rows Analyzed</p>
+              </CardContent>
+            </Card>
+
+            <Card className={`summary-card highlight-card ${getMatchColor(overallIndentationMatchPercentage)}`}>
+              <CardHeader className="summary-card-header">
+                <CheckCircle2 className="summary-icon" />
+                <CardTitle className="summary-card-title">Average Row Match</CardTitle>
+              </CardHeader>
+              <CardContent className="summary-card-content">
+                <p className="summary-value">{overallIndentationMatchPercentage.toFixed(2)}%</p>
+                <p className="summary-label">Avg. Match Percentage</p>
+              </CardContent>
+            </Card>
+
+            {/* Placeholder card since indentation details often only have one summary metric */}
+            <Card className="summary-card">
+              <CardHeader className="summary-card-header">
+                <AlertCircle className="summary-icon text-yellow-500" />
+                <CardTitle className="summary-card-title">Run ID</CardTitle>
+              </CardHeader>
+              <CardContent className="summary-card-content">
+                <p className="summary-value text-xl font-mono truncate">{currentRunId}</p>
+                <p className="summary-label">Timestamp Identifier</p>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
-      {/* SUPERSCRIPT BREAKDOWN */}
-      <div className="superscript-breakdown">
-        <Card>
-          <CardHeader>
-            <CardTitle>Superscript Analysis</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="breakdown-grid">
-              <div className="breakdown-item">
-                <div className="breakdown-icon-wrapper success">
-                  <CheckCircle2 className="h-5 w-5" />
+      {/* SUPERSCRIPT BREAKDOWN - ONLY FOR CONTENT COMPARISON */}
+      {!isIndentationDetails && (
+        <div className="superscript-breakdown">
+          <Card>
+            <CardHeader>
+              <CardTitle>Superscript Analysis</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="breakdown-grid">
+                <div className="breakdown-item">
+                  <div className="breakdown-icon-wrapper success">
+                    <CheckCircle2 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="breakdown-label">True Positives</p>
+                    <p className="breakdown-value">{totalTPSuperscript}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="breakdown-label">True Positives</p>
-                  <p className="breakdown-value">{totalTPSuperscript}</p>
+                <div className="breakdown-item">
+                  <div className="breakdown-icon-wrapper danger">
+                    <XCircle className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="breakdown-label">False Positives</p>
+                    <p className="breakdown-value">{totalFPSuperscript}</p>
+                  </div>
+                </div>
+                <div className="breakdown-item">
+                  <div className="breakdown-icon-wrapper warning">
+                    <AlertCircle className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="breakdown-label">False Negatives</p>
+                    <p className="breakdown-value">{totalFNSuperscript}</p>
+                  </div>
                 </div>
               </div>
-              <div className="breakdown-item">
-                <div className="breakdown-icon-wrapper danger">
-                  <XCircle className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="breakdown-label">False Positives</p>
-                  <p className="breakdown-value">{totalFPSuperscript}</p>
-                </div>
-              </div>
-              <div className="breakdown-item">
-                <div className="breakdown-icon-wrapper warning">
-                  <AlertCircle className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="breakdown-label">False Negatives</p>
-                  <p className="breakdown-value">{totalFNSuperscript}</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* DETAILED RESULTS TABLE */}
       <Card className="details-table-card">
@@ -188,43 +248,83 @@ export function RunDetailsPage({ data, runId, onGoBack, state }: RunDetailsPageP
                 <TableRow>
                   <TableHead className="font-semibold">File Name</TableHead>
                   <TableHead className="text-center font-semibold">Page</TableHead>
-                  <TableHead className="text-right font-semibold">Total Paragraphs</TableHead>
-                  <TableHead className="text-right font-semibold">Content Matches</TableHead>
-                  <TableHead className="text-right font-semibold">Content Match %</TableHead>
-                  <TableHead className="text-right font-semibold">TP</TableHead>
-                  <TableHead className="text-right font-semibold">FP</TableHead>
-                  <TableHead className="text-right font-semibold">FN</TableHead>
-                  <TableHead className="text-right font-semibold">Superscript Matches</TableHead>
-                  <TableHead className="text-right font-semibold">Superscript %</TableHead>
+                  {isIndentationDetails ? ( // <-- UPDATED HEADERS
+                    <>
+                      <TableHead className="text-right font-semibold">Total Rows</TableHead>
+                      <TableHead className="text-right font-semibold">Row Match %</TableHead>
+                      <TableHead className="text-right font-semibold">Level Match %</TableHead> {/* ADDED */}
+                      <TableHead className="text-right font-semibold">Parent Text %</TableHead> {/* ADDED */}
+                      <TableHead className="text-right font-semibold">Row Data %</TableHead> {/* ADDED */}
+                      <TableHead className="text-right font-semibold">GT Rows</TableHead> 
+                      <TableHead className="text-right font-semibold">Table Num</TableHead> 
+                    </>
+                  ) : (
+                    <>
+                      <TableHead className="text-right font-semibold">Total Paragraphs</TableHead>
+                      <TableHead className="text-right font-semibold">Content Matches</TableHead>
+                      <TableHead className="text-right font-semibold">Content Match %</TableHead>
+                      <TableHead className="text-right font-semibold">TP</TableHead>
+                      <TableHead className="text-right font-semibold">FP</TableHead>
+                      <TableHead className="text-right font-semibold">FN</TableHead>
+                      <TableHead className="text-right font-semibold">Superscript Matches</TableHead>
+                      <TableHead className="text-right font-semibold">Superscript %</TableHead>
+                    </>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.map((item, index) => (
-                  <TableRow key={`${item.File_Name}-${item.Page_Num}-${index}`} className="table-row-hover">
-                    <TableCell className="font-medium">{item.File_Name}</TableCell>
-                    <TableCell className="text-center">
-                      <span className="page-badge">{item.Page_Num}</span>
-                    </TableCell>
-                    <TableCell className="text-right">{item.total_paragraphs}</TableCell>
-                    <TableCell className="text-right">{item.content_matches}</TableCell>
-                    <TableCell className={`text-right font-semibold ${getMatchColorClass(item.content_match_percentage)}`}>
-                      {item.content_match_percentage.toFixed(2)}%
-                    </TableCell>
-                    <TableCell className="text-right text-green-600 dark:text-green-400">
-                      {item.TP_superscript}
-                    </TableCell>
-                    <TableCell className="text-right text-red-600 dark:text-red-400">
-                      {item.FP_superscript}
-                    </TableCell>
-                    <TableCell className="text-right text-yellow-600 dark:text-yellow-400">
-                      {item.FN_superscript}
-                    </TableCell>
-                    <TableCell className="text-right">{item.superscript_matches}</TableCell>
-                    <TableCell className={`text-right font-semibold ${getMatchColorClass(item.superscript_match_percentage)}`}>
-                      {item.superscript_match_percentage.toFixed(2)}%
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {data.map((item: any, index: number) => { 
+                  // 🚨 DEBUGGING: Log the item structure before processing
+                  console.log(`Item at index ${index}:`, item);
+                  
+                  return (
+                    <TableRow key={`${item.File_Name}-${item.Page_Num}-${index}`} className="table-row-hover">
+                      <TableCell className="font-medium">{item.File_Name}</TableCell>
+                      <TableCell className="text-center"><span className="page-badge">{item.Page_Num}</span></TableCell>
+                      
+                      {isIndentationDetails ? ( // <-- UPDATED CELLS
+                        <>
+                          <TableCell className="text-right">{item.total_rows || 'N/A'}</TableCell>
+                          <TableCell className={`text-right font-semibold ${getMatchColorClass(item.row_match_percentage || 0)}`}>
+                            {(item.row_match_percentage || 0).toFixed(2)}%
+                          </TableCell>
+                          <TableCell className={`text-right font-semibold ${getMatchColorClass(item.indentation_level_match_percentage || 0)}`}>
+                            {(item.indentation_level_match_percentage || 0).toFixed(2)}%
+                          </TableCell>
+                          <TableCell className={`text-right font-semibold ${getMatchColorClass(item.parent_text_match_percentage || 0)}`}>
+                            {(item.parent_text_match_percentage || 0).toFixed(2)}%
+                          </TableCell>
+                          <TableCell className={`text-right font-semibold ${getMatchColorClass(item.row_data_match_percentage || 0)}`}>
+                            {(item.row_data_match_percentage || 0).toFixed(2)}%
+                          </TableCell>
+                          <TableCell className="text-right">{item.gt_rows || 'N/A'}</TableCell> 
+                          <TableCell className="text-right">{item.Table_Num || 'N/A'}</TableCell> 
+                        </>
+                      ) : (
+                        <>
+                          <TableCell className="text-right">{item.total_paragraphs}</TableCell>
+                          <TableCell className="text-right">{item.content_matches}</TableCell>
+                          <TableCell className={`text-right font-semibold ${getMatchColorClass(item.content_match_percentage)}`}>
+                            {item.content_match_percentage.toFixed(2)}%
+                          </TableCell>
+                          <TableCell className="text-right text-green-600 dark:text-green-400">
+                            {item.TP_superscript}
+                          </TableCell>
+                          <TableCell className="text-right text-red-600 dark:text-red-400">
+                            {item.FP_superscript}
+                          </TableCell>
+                          <TableCell className="text-right text-yellow-600 dark:text-yellow-400">
+                            {item.FN_superscript}
+                          </TableCell>
+                          <TableCell className="text-right">{item.superscript_matches}</TableCell>
+                          <TableCell className={`text-right font-semibold ${getMatchColorClass(item.superscript_match_percentage)}`}>
+                            {item.superscript_match_percentage.toFixed(2)}%
+                          </TableCell>
+                        </>
+                      )}
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
