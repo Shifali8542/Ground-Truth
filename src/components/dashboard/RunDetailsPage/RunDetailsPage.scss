@@ -1,0 +1,237 @@
+.run-details-page {
+  padding: 2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.empty-details-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+.details-header {
+  margin-bottom: 2rem;
+  
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .header-title-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .header-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary)) 60%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header-subtitle {
+    font-size: 0.95rem;
+    color: hsl(var(--muted-foreground));
+    margin-top: 0.25rem;
+  }
+}
+
+.summary-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.summary-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  &.highlight-card {
+    border-width: 2px;
+    
+    &.success {
+      border-color: hsl(142, 76%, 36%);
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(34, 197, 94, 0.02));
+    }
+    
+    &.warning {
+      border-color: hsl(48, 96%, 53%);
+      background: linear-gradient(135deg, rgba(234, 179, 8, 0.05), rgba(234, 179, 8, 0.02));
+    }
+    
+    &.danger {
+      border-color: hsl(0, 84%, 60%);
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(239, 68, 68, 0.02));
+    }
+  }
+}
+
+.summary-card-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.5rem;
+}
+
+.summary-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.summary-card-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.summary-card-content {
+  padding-top: 0.5rem;
+}
+
+.summary-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.summary-label {
+  font-size: 0.85rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.superscript-breakdown {
+  margin-bottom: 2rem;
+}
+
+.breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background: hsl(var(--muted) / 0.3);
+  transition: background 0.2s;
+
+  &:hover {
+    background: hsl(var(--muted) / 0.5);
+  }
+}
+
+.breakdown-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  
+  &.success {
+    background: rgba(34, 197, 94, 0.1);
+    color: hsl(142, 76%, 36%);
+  }
+  
+  &.warning {
+    background: rgba(234, 179, 8, 0.1);
+    color: hsl(48, 96%, 53%);
+  }
+  
+  &.danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: hsl(0, 84%, 60%);
+  }
+}
+
+.breakdown-label {
+  font-size: 0.85rem;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 0.25rem;
+}
+
+.breakdown-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.details-table-card {
+  margin-top: 2rem;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 0.5rem;
+}
+
+.table-row-hover {
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: hsl(var(--muted) / 0.5);
+  }
+}
+
+.page-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .run-details-page {
+    padding: 1rem;
+  }
+
+  .details-header {
+    .header-content {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+
+  .summary-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-value {
+    font-size: 2rem;
+  }
+}

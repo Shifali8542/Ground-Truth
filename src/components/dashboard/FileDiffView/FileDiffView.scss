@@ -1,0 +1,72 @@
+.file-diff-view {
+  width: 100%;
+
+  .card {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+  }
+
+  table {
+    font-size: 0.875rem;
+  }
+
+  thead {
+    background-color: hsl(var(--muted) / 0.3);
+  }
+
+  tbody tr {
+    transition: background-color 0.2s ease;
+
+    &.match {
+      background-color: hsl(120, 50%, 95%);
+
+      &:hover {
+        background-color: hsl(120, 50%, 90%);
+      }
+    }
+
+    &.mismatch {
+      background-color: hsl(0, 50%, 95%);
+
+      &:hover {
+        background-color: hsl(0, 50%, 90%);
+      }
+    }
+
+    .dark & {
+      &.match {
+        background-color: hsl(120, 30%, 20%);
+
+        &:hover {
+          background-color: hsl(120, 30%, 25%);
+        }
+      }
+
+      &.mismatch {
+        background-color: hsl(0, 30%, 20%);
+
+        &:hover {
+          background-color: hsl(0, 30%, 25%);
+        }
+      }
+    }
+  }
+
+  .content-cell {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+
+    sup {
+      font-size: 0.7em;
+      vertical-align: super;
+      color: hsl(var(--primary));
+    }
+  }
+}
