@@ -1,7 +1,8 @@
-import type { ComparisonRun, FileResult, FileDiffRow, IndentationSummaryData, RunDetailPageResult } from './types';
+import type { ComparisonRun, IndentationSummaryData, RunDetailPageResult } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.1.11:8000/';
 
+// When any user Uplaod GT and Output Zip files and click on Run Comparison button then this function will be called
 export async function runNewComparison(gtZip: File, outputZip: File): Promise<{ runId: string }> {
   const formData = new FormData();
   formData.append('gt_zip', gtZip);
@@ -18,6 +19,7 @@ export async function runNewComparison(gtZip: File, outputZip: File): Promise<{ 
   return response.json();
 }
 
+// When user click on Superscript Summary Results then this function will be called
 export async function fetchAllRuns(): Promise<ComparisonRun[]> {
   const response = await fetch(`${API_BASE_URL}api/summary/all_runs/`);
 
@@ -28,6 +30,7 @@ export async function fetchAllRuns(): Promise<ComparisonRun[]> {
   return response.json();
 }
 
+// When any user click on Indentation Result then this function will be called
 export async function fetchIndentationSummary(): Promise<IndentationSummaryData[]> {
   const response = await fetch(`${API_BASE_URL}/api/indent/summary/all_runs/`);
 
@@ -38,31 +41,7 @@ export async function fetchIndentationSummary(): Promise<IndentationSummaryData[
   return response.json();
 }
 
-export async function fetchRunDetails(runId: string): Promise<FileResult[]> {
-  const response = await fetch(`${API_BASE_URL}/api/comparison/runs/${runId}/details`);
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch run details');
-  }
-
-  return response.json();
-}
-
-export async function fetchFileDiff(
-  runId: string,
-  fileName: string,
-  fileSuffix: string
-): Promise<FileDiffRow[]> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/comparison/runs/${runId}/diff?fileName=${encodeURIComponent(fileName)}&suffix=${encodeURIComponent(fileSuffix)}`
-  );
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch file diff');
-  }
-
-  return response.json();
-}
+// When any user Click on Content Run Details Page then this function will be called
 export async function fetchRunDetailPage(runId: string): Promise<RunDetailPageResult[]> {
   const response = await fetch(`${API_BASE_URL}api/runs/${runId}/`);
 
@@ -73,6 +52,7 @@ export async function fetchRunDetailPage(runId: string): Promise<RunDetailPageRe
   return response.json();
 }
 
+// When user click on Indentation Details Page then this function will be called
 export async function fetchIndentationDetailPage(runId: string): Promise<RunDetailPageResult[]> {
   const response = await fetch(`${API_BASE_URL}api/indent/runs/${runId}/`);
 
@@ -83,9 +63,8 @@ export async function fetchIndentationDetailPage(runId: string): Promise<RunDeta
   return response.json();
 }
 
-// ADD NEW FUNCTION: fetchFileThreeWayView
+// When any user click on view page then this function will be called
 export async function fetchFileThreeWayView(runId: string, fileName: string, pageNum: number): Promise<any> {
-  // We assume the backend API structure is run/<str:run_timestamp>/files/<str:file_name>/?page=<int:page_num>
   const url = `${API_BASE_URL}api/runs/${runId}/files/${encodeURIComponent(fileName)}/?page=${pageNum}`;
 
   const response = await fetch(url);
@@ -96,16 +75,3 @@ export async function fetchFileThreeWayView(runId: string, fileName: string, pag
 
   return response.json();
 }
-
-// REMOVE the existing fetchFileDetailPage function
-/*
-export async function fetchFileDetailPage(runId: string, fileName: string): Promise<any> {
-  const response = await fetch(`${API_BASE_URL}api/runs/${runId}/files/${encodeURIComponent(fileName)}/`);
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch file detail page for ${fileName} in run ${runId}`);
-  }
-
-  return response.json();
-}
-*/

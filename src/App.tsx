@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Sidebar } from './components/layout/Sidebar';
 import { MainContent } from './components/layout/MainContent';
-// UPDATE IMPORT: fetchFileDetailPage is replaced by fetchFileThreeWayView
-import { fetchAllRuns, fetchRunDetails, fetchFileDiff, fetchIndentationSummary, fetchRunDetailPage, fetchIndentationDetailPage, fetchFileThreeWayView } from './api';
-import type { SidebarState, ComparisonRun, FileResult, FileDiffRow, IndentationSummaryData, RunDetailPageResult } from './types';
+import { fetchAllRuns, fetchIndentationSummary, fetchRunDetailPage, fetchIndentationDetailPage, fetchFileThreeWayView } from './api';
+import type { SidebarState, ComparisonRun, IndentationSummaryData, RunDetailPageResult } from './types';
+import Loader from '././components/ui/loader';
 
 function App() {
-  type View = 'finalSummary' | 'runSummary' | 'fileDiff' | 'indentationResult' | 'runDetails';
+  type View = 'finalSummary' | 'runSummary' | 'indentationResult' | 'runDetails';
   const [state, setState] = useState<SidebarState>({
     currentView: 'finalSummary',
     columnToggle: 'all',
@@ -32,8 +32,6 @@ function App() {
   }, [state.showFinalSummary, state.showIndentationResult, state.showRunSummary, state.showFileDiff, state.selectedRunId, state.selectedFileName, state.selectedFileSuffix]);
 
   const [allRuns, setAllRuns] = useState<ComparisonRun[]>([]);
-  const [fileResults, setFileResults] = useState<FileResult[]>([]);
-  const [fileDiff, setFileDiff] = useState<FileDiffRow[]>([]);
   const [indentationResults, setIndentationResults] = useState<IndentationSummaryData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -43,8 +41,7 @@ function App() {
   const [fileDetailData, setFileDetailData] = useState<any>(null);
   const [fileDetailFileName, setFileDetailFileName] = useState<string | null>(null);
   const [fileDetailRunId, setFileDetailRunId] = useState<string | null>(null);
-  // ADD NEW STATE: To manage the current page number for the 3-way viewer
-  const [fileDetailPageNum, setFileDetailPageNum] = useState<number>(1); // ADD
+  const [fileDetailPageNum, setFileDetailPageNum] = useState<number>(1);
   const [isDetailsLoading, setIsDetailsLoading] = useState<boolean>(false);
   useEffect(() => {
     async function loadRuns() {
@@ -75,50 +72,10 @@ function App() {
     }
   }, [state.showFinalSummary, state.showIndentationResult, state.showRunSummary, state.showFileDiff, state.selectedRunId, state.selectedFileName, state.selectedFileSuffix]);
 
-  useEffect(() => {
-    if (!state.selectedRunId) {
-      setFileResults([]);
-      return;
-    }
-
-    async function loadRunDetails() {
-      try {
-        const details = await fetchRunDetails(state.selectedRunId!);
-        setFileResults(details);
-      } catch (error) {
-        console.error('Failed to fetch run details:', error);
-      }
-    }
-
-    loadRunDetails();
-  }, [state.selectedRunId]);
-
-  useEffect(() => {
-    if (!state.selectedRunId || !state.selectedFileName || !state.selectedFileSuffix) {
-      setFileDiff([]);
-      return;
-    }
-
-    async function loadFileDiff() {
-      try {
-        const diff = await fetchFileDiff(
-          state.selectedRunId!,
-          state.selectedFileName!,
-          state.selectedFileSuffix!
-        );
-        setFileDiff(diff);
-      } catch (error) {
-        console.error('Failed to fetch file diff:', error);
-      }
-    }
-
-    loadFileDiff();
-  }, [state.selectedRunId, state.selectedFileName, state.selectedFileSuffix]);
 
   useEffect(() => {
     if (!detailRunId) {
       setRunDetailsData([]);
-      // Ensure the view is NOT stuck on 'runDetails' if the ID is cleared
       if (state.currentView === 'runDetails') {
         setState(prev => ({ ...prev, currentView: 'finalSummary' }));
       }
@@ -126,16 +83,17 @@ function App() {
     }
 
     async function loadRunDetailsPage() {
+      setIsDetailsLoading(true);
       try {
         const details = await fetchRunDetailPage(detailRunId!);
         setRunDetailsData(details);
-        // Change view ONLY after successful data fetch
         setState(prev => ({ ...prev, currentView: 'runDetails' })); 
       } catch (error) {
         console.error('Failed to fetch run detail page:', error);
-        // Fallback on error to prevent being stuck in a loading loop
         setDetailRunId(null);
         setState(prev => ({ ...prev, currentView: 'finalSummary' }));
+        } finally {
+        setIsDetailsLoading(false);
       }
     }
 
@@ -145,14 +103,14 @@ function App() {
   useEffect(() => {
     if (!indentationDetailRunId) {
       setRunDetailsData([]);
-      // Ensure the view is NOT stuck on 'runDetails' if the ID is cleared
       if (state.currentView === 'runDetails') {
-        setState(prev => ({ ...prev, currentView: 'indentationResult' })); // Assume back to indentation view
+        setState(prev => ({ ...prev, currentView: 'indentationResult' }));
       }
       return;
     }
 
     async function loadIndentationDetailsPage() {
+      setIsDetailsLoading(true);
       try {
         const details = await fetchIndentationDetailPage(indentationDetailRunId!);
         setRunDetailsData(details);
@@ -161,27 +119,27 @@ function App() {
         console.error('Failed to fetch indentation detail page:', error);
         setIndentationDetailRunId(null);
         setState(prev => ({ ...prev, currentView: 'indentationResult' }));
+        } finally {
+        setIsDetailsLoading(false);
       }
     }
 
     loadIndentationDetailsPage();
   }, [indentationDetailRunId]);
 
-  // UPDATE useEffect: To handle fetching the three-way view data with page number
   useEffect(() => {
-    // Condition now depends on page number as well
     if (!fileDetailFileName || !fileDetailRunId) {
       setFileDetailData(null);
-      setFileDetailPageNum(1); // Reset page on close
+      setFileDetailPageNum(1);
       return;
     }
 
-    async function loadFileThreeWayView() { // RENAMED FUNCTION
+    async function loadFileThreeWayView() { 
+      setIsDetailsLoading(true);
       try {
-        // CALL NEW API FUNCTION with pageNum
         const data = await fetchFileThreeWayView(fileDetailRunId!, fileDetailFileName!, fileDetailPageNum); 
         
-        if (data) { // Check for data presence
+        if (data) { 
             setFileDetailData(data);
         } else {
             console.warn('File detail API returned empty data.');
@@ -192,13 +150,19 @@ function App() {
         setFileDetailData(null); 
         setFileDetailFileName(null); 
         setFileDetailRunId(null);
-        setFileDetailPageNum(1); // Reset page on error
+        setFileDetailPageNum(1);
         alert("Error loading file details. Please check the server."); 
+        } finally {
+        setIsDetailsLoading(false);
       }
     }
 
-    loadFileThreeWayView(); // CALL RENAMED FUNCTION
-  }, [fileDetailFileName, fileDetailRunId, fileDetailPageNum]); // ADD fileDetailPageNum as dependency
+    loadFileThreeWayView(); 
+  }, [fileDetailFileName, fileDetailRunId, fileDetailPageNum]); 
+
+  if (isDetailsLoading) {
+    return <Loader />; // Renders ONLY the loader when loading
+  }
 
   return (
     <div className="app">
@@ -206,7 +170,6 @@ function App() {
         state={state}
         onStateChange={setState}
         allRuns={allRuns}
-        fileResults={fileResults}
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
       />
@@ -214,8 +177,6 @@ function App() {
         state={state}
         onStateChange={setState}
         allRuns={allRuns}
-        fileResults={fileResults}
-        fileDiff={fileDiff}
         indentationResults={indentationResults}
         isSidebarOpen={isSidebarOpen}
         runDetailsData={runDetailsData}
@@ -227,9 +188,9 @@ function App() {
         setFileDetailData={setFileDetailData}
         setFileDetailFileName={setFileDetailFileName}
         setFileDetailRunId={setFileDetailRunId}
-        // ADD NEW PROPS
         fileDetailPageNum={fileDetailPageNum}
         setFileDetailPageNum={setFileDetailPageNum}
+        fileDetailRunId={fileDetailRunId}
       />
     </div>
   );

@@ -3,12 +3,10 @@ import { Upload, Moon, Sun, X, Menu } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Checkbox } from '../ui/checkbox';
 import { Label } from '../ui/label';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
-import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import {Dialog, DialogContent, DialogDescription, DialogFooter,DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { useTheme } from '../theme-provider';
-import type { SidebarState, ComparisonRun, FileResult } from '../../types';
+import type { SidebarState, ComparisonRun } from '../../types';
 import { runNewComparison } from '../../api';
 import './Sidebar.scss';
 
@@ -16,7 +14,6 @@ interface SidebarProps {
   state: SidebarState;
   onStateChange: (state: SidebarState) => void;
   allRuns: ComparisonRun[];
-  fileResults: FileResult[];
   isSidebarOpen: boolean; 
   setIsSidebarOpen: (isOpen: boolean) => void;
 }
@@ -24,8 +21,6 @@ interface SidebarProps {
 export function Sidebar({
   state,
   onStateChange,
-  allRuns,
-  fileResults,
   isSidebarOpen, 
   setIsSidebarOpen, 
 }: SidebarProps) {
@@ -34,20 +29,6 @@ export function Sidebar({
   const [gtZipFile, setGtZipFile] = useState<File | null>(null);
   const [outputZipFile, setOutputZipFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-
-  const uniqueFileNames = Array.from(
-    new Set(fileResults.map((f) => f.file_name))
-  ).sort();
-
-  const fileSuffixes = state.selectedFileName
-    ? Array.from(
-      new Set(
-        fileResults
-          .filter((f) => f.file_name === state.selectedFileName)
-          .map((f) => f.page_num.toString())
-      )
-    ).sort()
-    : [];
 
   const handleRunComparison = async () => {
     if (!gtZipFile || !outputZipFile) return;
@@ -196,114 +177,6 @@ export function Sidebar({
                 <Label htmlFor="file-diff">Show Individual File Results</Label>
               </div>
             </div>
-          </div>
-
-          <div className="sidebar-section">
-            <h3 className="sidebar-section-title">Column Selection</h3>
-            <RadioGroup
-              value={state.columnToggle}
-              onValueChange={(value) =>
-                onStateChange({ ...state, columnToggle: value as any })
-              }
-            >
-              <div className="radio-item">
-                <RadioGroupItem value="all" id="all-columns" />
-                <Label htmlFor="all-columns">All Columns</Label>
-              </div>
-              <div className="radio-item">
-                <RadioGroupItem value="superscript" id="superscript-columns" />
-                <Label htmlFor="superscript-columns">Superscript Results</Label>
-              </div>
-              <div className="radio-item">
-                <RadioGroupItem value="font_info" id="font-info-columns" />
-                <Label htmlFor="font-info-columns">Font Info Results</Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-          <div className="sidebar-section">
-            <h3 className="sidebar-section-title">Data Selection</h3>
-            <div className="dropdown-group">
-              <Label>Select Result Folder (Run)</Label>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start">
-                    {state.selectedRunId || 'Select Run...'}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56">
-                  {allRuns.map((run) => (
-                    <DropdownMenuItem
-                      key={run.id}
-                      onClick={() =>
-                        onStateChange({
-                          ...state,
-                          selectedRunId: run.id,
-                          selectedFileName: null,
-                          selectedFileSuffix: null,
-                        })
-                      }
-                    >
-                      {run.Date_Time}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-
-            {state.selectedRunId && (
-              <div className="dropdown-group">
-                <Label>File Name</Label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start">
-                      {state.selectedFileName || 'Select File...'}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56">
-                    {uniqueFileNames.map((fileName) => (
-                      <DropdownMenuItem
-                        key={fileName}
-                        onClick={() =>
-                          onStateChange({
-                            ...state,
-                            selectedFileName: fileName,
-                            selectedFileSuffix: null,
-                          })
-                        }
-                      >
-                        {fileName}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            )}
-
-            {state.selectedFileName && (
-              <div className="dropdown-group">
-                <Label>File Suffix</Label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start">
-                      {state.selectedFileSuffix || 'Select Suffix...'}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56">
-                    {fileSuffixes.map((suffix) => (
-                      <DropdownMenuItem
-                        key={suffix}
-                        onClick={() =>
-                          onStateChange({ ...state, selectedFileSuffix: suffix })
-                        }
-                      >
-                        Page {suffix}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            )}
           </div>
         </div>
       </aside>

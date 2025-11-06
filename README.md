@@ -171,8 +171,7 @@ npm run build
 
 - **Start New Comparison**: Opens a dialog to upload Ground Truth and Output ZIP files
 - **Display Options**: Toggle visibility of different views
-- **Column Selection**: Choose which columns to display in the Run Summary table
-- **Data Selectors**: Navigate through runs, files, and pages
+
 
 ### Main Content Area
 

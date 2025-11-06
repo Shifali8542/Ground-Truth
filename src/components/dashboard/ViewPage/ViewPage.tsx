@@ -40,7 +40,7 @@ const formatValue = (key: string, value: any) => {
   return value.toString();
 };
 
-// NEW COMPONENT: Editable Checkbox for Match Status
+// Editable Checkbox for Match Status
 interface MatchCheckboxProps {
   id: string;
   checked: boolean;
