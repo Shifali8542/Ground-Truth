@@ -19,34 +19,12 @@ interface RunDetailsPageProps {
   runId: string | null;
   onGoBack: () => void;
   state: SidebarState; 
+  // UPDATE PROP: Add initial page number to the view function
+  onViewFileDetails: (fileName: string, runId: string, pageNum: number) => void; 
 }
 
-export function RunDetailsPage({ data, runId, onGoBack, state }: RunDetailsPageProps) {
-  
-  // 🚨 DEBUGGING: Log the full data array received
-  console.log("RunDetailsPage Data Received:", data);
-
-  if (!runId || data.length === 0) {
-    return (
-      <motion.div 
-        initial={{ opacity: 0 }} 
-        animate={{ opacity: 1 }} 
-        className="empty-details-state"
-      >
-        <AlertCircle className="h-16 w-16 text-muted-foreground" />
-        <p className="text-muted-foreground text-lg">No detailed data found for this run.</p>
-        <Button onClick={onGoBack} variant="outline" className="mt-4">
-          <ChevronLeft className="h-4 w-4 mr-2" /> Back to Summary
-        </Button>
-      </motion.div>
-    );
-  }
-  
-  // Check for a unique indentation field to determine the view type
+export function RunDetailsPage({ data, runId, onGoBack, state, onViewFileDetails }: RunDetailsPageProps) {
   const isIndentationDetails = data.some((item: any) => 'total_rows' in item);
-
-  // Calculate high-level summary metadata (Content Comparison)
-  // We use type 'any' for data.reduce temporarily to accommodate both data structures
   const totalFiles = data.length;
   const totalParagraphs = data.reduce((sum, item: any) => sum + (item.total_paragraphs || 0), 0);
   const totalMatches = data.reduce((sum, item: any) => sum + (item.content_matches || 0), 0);
@@ -54,14 +32,9 @@ export function RunDetailsPage({ data, runId, onGoBack, state }: RunDetailsPageP
   const totalFPSuperscript = data.reduce((sum, item: any) => sum + (item.FP_superscript || 0), 0);
   const totalFNSuperscript = data.reduce((sum, item: any) => sum + (item.FN_superscript || 0), 0);
   const totalSuperscriptMatches = data.reduce((sum, item: any) => sum + (item.superscript_matches || 0), 0);
-  
   const contentMatchOverall = totalParagraphs > 0 ? (totalMatches / totalParagraphs) * 100 : 0;
   const superscriptMatchOverall = totalParagraphs > 0 ? (totalSuperscriptMatches / totalParagraphs) * 100 : 0;
-
-  // Calculate high-level summary metadata (Indentation Comparison)
   const totalRows = data.reduce((sum, item: any) => sum + (item.total_rows || 0), 0);
-  // NOTE: Calculating overall row match percentage requires more complex logic (weighted average), 
-  // but for a simple display, we'll use a placeholder or sum the available values.
   const overallIndentationMatchPercentage = data.reduce((sum, item: any) => sum + (item.row_match_percentage || 0), 0) / data.length;
 
   // Function to determine color based on match percentage
@@ -268,15 +241,13 @@ export function RunDetailsPage({ data, runId, onGoBack, state }: RunDetailsPageP
                       <TableHead className="text-right font-semibold">FN</TableHead>
                       <TableHead className="text-right font-semibold">Superscript Matches</TableHead>
                       <TableHead className="text-right font-semibold">Superscript %</TableHead>
+                      <TableHead className="text-center font-semibold">View Page</TableHead>
                     </>
                   )}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.map((item: any, index: number) => { 
-                  // 🚨 DEBUGGING: Log the item structure before processing
-                  console.log(`Item at index ${index}:`, item);
-                  
                   return (
                     <TableRow key={`${item.File_Name}-${item.Page_Num}-${index}`} className="table-row-hover">
                       <TableCell className="font-medium">{item.File_Name}</TableCell>
@@ -319,6 +290,19 @@ export function RunDetailsPage({ data, runId, onGoBack, state }: RunDetailsPageP
                           <TableCell className="text-right">{item.superscript_matches}</TableCell>
                           <TableCell className={`text-right font-semibold ${getMatchColorClass(item.superscript_match_percentage)}`}>
                             {item.superscript_match_percentage.toFixed(2)}%
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const uniqueFileName = `${item.File_Name}_${item.Page_Num}`;
+                                // UPDATE: Pass the initial page number (1)
+                                onViewFileDetails(uniqueFileName, runId!, 1); 
+                              }}
+                            >
+                              View
+                            </Button>
                           </TableCell>
                         </>
                       )}

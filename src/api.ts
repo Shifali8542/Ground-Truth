@@ -82,3 +82,30 @@ export async function fetchIndentationDetailPage(runId: string): Promise<RunDeta
 
   return response.json();
 }
+
+// ADD NEW FUNCTION: fetchFileThreeWayView
+export async function fetchFileThreeWayView(runId: string, fileName: string, pageNum: number): Promise<any> {
+  // We assume the backend API structure is run/<str:run_timestamp>/files/<str:file_name>/?page=<int:page_num>
+  const url = `${API_BASE_URL}api/runs/${runId}/files/${encodeURIComponent(fileName)}/?page=${pageNum}`;
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch file three-way view for ${fileName} in run ${runId}`);
+  }
+
+  return response.json();
+}
+
+// REMOVE the existing fetchFileDetailPage function
+/*
+export async function fetchFileDetailPage(runId: string, fileName: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}api/runs/${runId}/files/${encodeURIComponent(fileName)}/`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch file detail page for ${fileName} in run ${runId}`);
+  }
+
+  return response.json();
+}
+*/
