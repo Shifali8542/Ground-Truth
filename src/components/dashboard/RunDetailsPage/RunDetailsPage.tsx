@@ -18,9 +18,9 @@ interface RunDetailsPageProps {
   data: RunDetailPageResult[];
   runId: string | null;
   onGoBack: () => void;
-  state: SidebarState; 
+  state: SidebarState;
   // UPDATE PROP: Add initial page number to the view function
-  onViewFileDetails: (fileName: string, runId: string, pageNum: number) => void; 
+  onViewFileDetails: (fileName: string, runId: string, pageNum: number) => void;
 }
 
 export function RunDetailsPage({ data, runId, onGoBack, state, onViewFileDetails }: RunDetailsPageProps) {
@@ -228,8 +228,9 @@ export function RunDetailsPage({ data, runId, onGoBack, state, onViewFileDetails
                       <TableHead className="text-right font-semibold">Level Match %</TableHead> {/* ADDED */}
                       <TableHead className="text-right font-semibold">Parent Text %</TableHead> {/* ADDED */}
                       <TableHead className="text-right font-semibold">Row Data %</TableHead> {/* ADDED */}
-                      <TableHead className="text-right font-semibold">GT Rows</TableHead> 
-                      <TableHead className="text-right font-semibold">Table Num</TableHead> 
+                      <TableHead className="text-right font-semibold">GT Rows</TableHead>
+                      <TableHead className="text-right font-semibold">Table Num</TableHead>
+                      <TableHead className="text-center font-semibold">View Page</TableHead>
                     </>
                   ) : (
                     <>
@@ -247,13 +248,13 @@ export function RunDetailsPage({ data, runId, onGoBack, state, onViewFileDetails
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.map((item: any, index: number) => { 
+                {data.map((item: any, index: number) => {
                   return (
                     <TableRow key={`${item.File_Name}-${item.Page_Num}-${index}`} className="table-row-hover">
                       <TableCell className="font-medium">{item.File_Name}</TableCell>
                       <TableCell className="text-center"><span className="page-badge">{item.Page_Num}</span></TableCell>
-                      
-                      {isIndentationDetails ? ( // <-- UPDATED CELLS
+
+                      {isIndentationDetails ? (
                         <>
                           <TableCell className="text-right">{item.total_rows || 'N/A'}</TableCell>
                           <TableCell className={`text-right font-semibold ${getMatchColorClass(item.row_match_percentage || 0)}`}>
@@ -268,8 +269,21 @@ export function RunDetailsPage({ data, runId, onGoBack, state, onViewFileDetails
                           <TableCell className={`text-right font-semibold ${getMatchColorClass(item.row_data_match_percentage || 0)}`}>
                             {(item.row_data_match_percentage || 0).toFixed(2)}%
                           </TableCell>
-                          <TableCell className="text-right">{item.gt_rows || 'N/A'}</TableCell> 
-                          <TableCell className="text-right">{item.Table_Num || 'N/A'}</TableCell> 
+                          <TableCell className="text-right">{item.gt_rows || 'N/A'}</TableCell>
+                          <TableCell className="text-right">{item.Table_Num || 'N/A'}</TableCell>
+                          <TableCell className="text-center">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const fileStemForApi = `${item.File_Name}${item.Table_Num ? `_table_${item.Table_Num}` : ''}`;
+                                const uniqueFileIdentifier = `${fileStemForApi}_${item.Page_Num}`;
+                                onViewFileDetails(uniqueFileIdentifier, runId!, Number(item.Page_Num));
+                              }}
+                            >
+                              View
+                            </Button>
+                          </TableCell>
                         </>
                       ) : (
                         <>
@@ -298,7 +312,7 @@ export function RunDetailsPage({ data, runId, onGoBack, state, onViewFileDetails
                               onClick={() => {
                                 const uniqueFileName = `${item.File_Name}_${item.Page_Num}`;
                                 // UPDATE: Pass the initial page number (1)
-                                onViewFileDetails(uniqueFileName, runId!, 1); 
+                                onViewFileDetails(uniqueFileName, runId!, 1);
                               }}
                             >
                               View

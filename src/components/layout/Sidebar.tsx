@@ -1,34 +1,41 @@
 import { useState } from 'react';
-import { Upload, Moon, Sun, X, Menu } from 'lucide-react'; 
+import { Upload, Moon, Sun, X, Menu } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Checkbox } from '../ui/checkbox';
 import { Label } from '../ui/label';
-import {Dialog, DialogContent, DialogDescription, DialogFooter,DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { useTheme } from '../theme-provider';
 import type { SidebarState, ComparisonRun } from '../../types';
-import { runNewComparison } from '../../api';
+import { runNewComparison, fetchUnprocessedGTFolders, fetchUnprocessedOutputFolders, runS3Comparison } from '../../api';
 import './Sidebar.scss';
 
 interface SidebarProps {
   state: SidebarState;
   onStateChange: (state: SidebarState) => void;
   allRuns: ComparisonRun[];
-  isSidebarOpen: boolean; 
+  isSidebarOpen: boolean;
   setIsSidebarOpen: (isOpen: boolean) => void;
 }
 
 export function Sidebar({
   state,
   onStateChange,
-  isSidebarOpen, 
-  setIsSidebarOpen, 
+  isSidebarOpen,
+  setIsSidebarOpen,
 }: SidebarProps) {
   const { theme, setTheme } = useTheme();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isLocalUploadDialogOpen, setIsLocalUploadDialogOpen] = useState(false);
+  const [isS3DialogOpen, setIsS3DialogOpen] = useState(false);
   const [gtZipFile, setGtZipFile] = useState<File | null>(null);
   const [outputZipFile, setOutputZipFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [gtFolders, setGtFolders] = useState<string[]>([]);
+  const [outputFolders, setOutputFolders] = useState<string[]>([]);
+  const [selectedGtFolder, setSelectedGtFolder] = useState<string | null>(null);
+  const [selectedOutputFolder, setSelectedOutputFolder] = useState<string | null>(null);
+  const [isS3Comparing, setIsS3Comparing] = useState(false);
+  const [changesDescription, setChangesDescription] = useState('Run from UI');
 
   const handleRunComparison = async () => {
     if (!gtZipFile || !outputZipFile) return;
@@ -36,7 +43,7 @@ export function Sidebar({
     setIsUploading(true);
     try {
       await runNewComparison(gtZipFile, outputZipFile);
-      setIsDialogOpen(false);
+      setIsS3DialogOpen(false);
       setGtZipFile(null);
       setOutputZipFile(null);
       window.location.reload();
@@ -47,11 +54,41 @@ export function Sidebar({
     }
   };
 
+  const handleRunS3Comparison = async () => {
+    if (!selectedGtFolder || !selectedOutputFolder ) return;
+
+    setIsS3Comparing(true);
+    try {
+      await runS3Comparison(selectedGtFolder, selectedOutputFolder, changesDescription);
+      setIsS3DialogOpen(false);
+      setSelectedGtFolder(null);
+      setSelectedOutputFolder(null);
+      setChangesDescription('Run from UI'); 
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to run S3 comparison:', error);
+    } finally {
+      setIsS3Comparing(false);
+    }
+  };
+
+  // New function to load folder names when the S3 dialog is opened
+  const loadS3Folders = async () => {
+    try {
+      const gt = await fetchUnprocessedGTFolders();
+      setGtFolders(gt);
+      const output = await fetchUnprocessedOutputFolders();
+      setOutputFolders(output);
+    } catch (error) {
+      console.error('Failed to load S3 folders:', error);
+    }
+  };
+
   return (
     <>
       {!isSidebarOpen && (
         <Button
-          variant="secondary" 
+          variant="secondary"
           size="icon"
           onClick={() => setIsSidebarOpen(true)}
           className="sidebar-fixed-toggle"
@@ -88,11 +125,11 @@ export function Sidebar({
 
         {/* --- MAIN CONTENT --- */}
         <div className="sidebar-content">
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isLocalUploadDialogOpen} onOpenChange={setIsLocalUploadDialogOpen}>
             <DialogTrigger asChild>
               <Button className="w-full" size="lg">
                 <Upload className="mr-2 h-5 w-5" />
-                Start New Comparison
+                Client Side
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -128,6 +165,86 @@ export function Sidebar({
                   disabled={!gtZipFile || !outputZipFile || isUploading}
                 >
                   {isUploading ? 'Running...' : 'Run Comparison'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* NEW SERVER SIDE S3 COMPARISON DIALOG TRIGGER */}
+          <Dialog
+            open={isS3DialogOpen}
+            onOpenChange={(isOpen) => {
+              setIsS3DialogOpen(isOpen);
+              if (isOpen) {
+                loadS3Folders();
+              } else {
+                setSelectedGtFolder(null);
+                setSelectedOutputFolder(null);
+              }
+            }}
+          >
+           <DialogTrigger asChild>
+              <Button className="w-full" size="lg">
+                <Upload className="mr-2 h-5 w-5" />
+                Server Side
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="z-[51]">
+              <DialogHeader>
+                <DialogTitle>Select S3 Folders</DialogTitle>
+                <DialogDescription>
+                  Choose Ground Truth and Output folders already uploaded to S3.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="gt-folder">Ground Truth Folder</Label>
+                  {/* Select dropdown for GT folders */}
+                  <select
+                    id="gt-folder"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={selectedGtFolder || ''}
+                    onChange={(e) => setSelectedGtFolder(e.target.value)}
+                  >
+                    <option value="" disabled>Select GT Folder</option>
+                    {gtFolders.map(folder => (
+                      <option key={folder} value={folder}>{folder}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="output-folder">Output Folder</Label>
+                  {/* Select dropdown for Output folders */}
+                  <select
+                    id="output-folder"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={selectedOutputFolder || ''}
+                    onChange={(e) => setSelectedOutputFolder(e.target.value)}
+                  >
+                    <option value="" disabled>Select Output Folder</option>
+                    {outputFolders.map(folder => (
+                      <option key={folder} value={folder}>{folder}</option>
+                    ))}
+                  </select>
+                </div>
+                {/* Input for Changes Description */}
+                <div className="grid gap-2">
+                  <Label htmlFor="changes-description">Changes Description</Label>
+                  <Input
+                    id="changes-description"
+                    type="text"
+                    value={changesDescription}
+                    onChange={(e) => setChangesDescription(e.target.value)}
+                    placeholder="Enter description for this run"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  onClick={handleRunS3Comparison}
+                  disabled={!selectedGtFolder || !selectedOutputFolder || isS3Comparing}
+                >
+                  {isS3Comparing ? 'Comparing...' : 'Run S3 Comparison'}
                 </Button>
               </DialogFooter>
             </DialogContent>

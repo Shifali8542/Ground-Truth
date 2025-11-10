@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Sidebar } from './components/layout/Sidebar';
 import { MainContent } from './components/layout/MainContent';
-import { fetchAllRuns, fetchIndentationSummary, fetchRunDetailPage, fetchIndentationDetailPage, fetchFileThreeWayView } from './api';
+import { fetchAllRuns, fetchIndentationSummary, fetchRunDetailPage, fetchIndentationDetailPage, fetchFileThreeWayView, fetchIndentationFileThreeWayView  } from './api';
 import type { SidebarState, ComparisonRun, IndentationSummaryData, RunDetailPageResult } from './types';
 import Loader from '././components/ui/loader';
 
@@ -134,10 +134,15 @@ function App() {
       return;
     }
 
+    // Determine which API to call based on which detail ID is currently set
+    const isIndentationView = !!indentationDetailRunId;
+    const fetchApi = isIndentationView ? fetchIndentationFileThreeWayView : fetchFileThreeWayView;
+
     async function loadFileThreeWayView() { 
       setIsDetailsLoading(true);
       try {
-        const data = await fetchFileThreeWayView(fileDetailRunId!, fileDetailFileName!, fileDetailPageNum); 
+        // Pass fileDetailFileName as the unique identifier (e.g., "file_name_1")
+        const data = await fetchApi(fileDetailRunId!, fileDetailFileName!, fileDetailPageNum); 
         
         if (data) { 
             setFileDetailData(data);
@@ -158,7 +163,7 @@ function App() {
     }
 
     loadFileThreeWayView(); 
-  }, [fileDetailFileName, fileDetailRunId, fileDetailPageNum]); 
+  }, [fileDetailFileName, fileDetailRunId, fileDetailPageNum, indentationDetailRunId]);
 
   if (isDetailsLoading) {
     return <Loader />; // Renders ONLY the loader when loading

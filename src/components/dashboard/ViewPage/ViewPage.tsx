@@ -205,7 +205,7 @@ export function FileThreeWayView({ data, onClose, onPageChange, onSave }: FileTh
 
   // Custom component for the JSON display area
   const JsonDisplay = ({ content, onMatchChange }: { content: any[], onMatchChange: (rowIndex: number, matchKey: string, isChecked: boolean) => void }) => (
-    <Card className="json-view-card">
+    <Card className="json-view-card overflow-x-auto">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className='flex items-center space-x-2'>
           <FileJson className="h-4 w-4 text-orange-500" />
@@ -279,7 +279,7 @@ export function FileThreeWayView({ data, onClose, onPageChange, onSave }: FileTh
           <div className="header-title-section">
             <FileText className="h-8 w-8 text-primary" />
             <div>
-              <h2 className="header-title">Three-Way File Comparison Viewer</h2>
+              <h2 className="header-title">File Comparison Viewer</h2>
               <p className="header-subtitle truncate">{fileName} (Page {currentPage})</p>
             </div>
           </div>

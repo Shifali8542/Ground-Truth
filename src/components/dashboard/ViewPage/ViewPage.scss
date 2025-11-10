@@ -101,8 +101,10 @@ button[variant="success"] {
 .json-view-card {
   .table-wrapper {
     max-height: calc(100vh - 200px);
-    overflow: auto;
-    width: 100%;
+    overflow-x: auto;
+  max-width: 100%;
+  display: block;
+  white-space: nowrap;
   }
 
   .comparison-row {

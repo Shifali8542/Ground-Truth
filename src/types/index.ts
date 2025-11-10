@@ -37,13 +37,6 @@ export interface FileResult {
   fp_font_info: number;
   fn_font_info: number;
 }
-
-export interface FileDiffRow {
-  index: number;
-  content_output: string;
-  content_gt: string;
-}
-
 export interface RunDetailPageResult {
   File_Name: string;
   Page_Num: string;
