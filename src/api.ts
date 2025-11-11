@@ -1,6 +1,6 @@
 import type { ComparisonRun, IndentationSummaryData, RunDetailPageResult } from './types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.1.11:8000/';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.1.18:8000/';
 
 // When user Uplaod GT and Output Zip files and click on Run Comparison button then this function will be called
 export async function runNewComparison(gtZip: File, outputZip: File): Promise<{ runId: string }> {
@@ -69,6 +69,17 @@ export async function fetchAllRuns(): Promise<ComparisonRun[]> {
   }
 
   return response.json();
+}
+
+// New function to delete a specific run by its timestamp
+export async function deleteRun(runTimestamp: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}api/runs/${runTimestamp}/`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete run ${runTimestamp}`);
+  }
 }
 
 // When any user click for Indentation Result then this function will be called

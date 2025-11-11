@@ -23,8 +23,38 @@
     transition: background-color 0.2s ease;
     border-color: hsl(var(--input));
 
-    &:hover {
-      background-color: hsl(var(--secondary));
+    tbody tr td:first-child {
+      position: relative;
+      padding-right: 40px;
+      /* Make space for the delete button */
+
+      .delete-button {
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        opacity: 0;
+        transition: opacity 0.2s ease, background-color 0.2s ease;
+        z-index: 10;
+        padding: 0;
+        height: 24px;
+        width: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        color: hsl(var(--destructive));
+        background-color: transparent;
+        border: none;
+
+        &:hover {
+          background-color: hsl(var(--destructive) / 0.1);
+        }
+      }
+
+      &:hover .delete-button {
+        opacity: 1;
+      }
     }
   }
 }

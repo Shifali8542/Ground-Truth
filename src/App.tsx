@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Sidebar } from './components/layout/Sidebar';
 import { MainContent } from './components/layout/MainContent';
-import { fetchAllRuns, fetchIndentationSummary, fetchRunDetailPage, fetchIndentationDetailPage, fetchFileThreeWayView, fetchIndentationFileThreeWayView  } from './api';
+import { fetchAllRuns, fetchIndentationSummary, fetchRunDetailPage, fetchIndentationDetailPage, fetchFileThreeWayView, fetchIndentationFileThreeWayView, deleteRun  } from './api';
 import type { SidebarState, ComparisonRun, IndentationSummaryData, RunDetailPageResult } from './types';
 import Loader from '././components/ui/loader';
 
@@ -133,15 +133,12 @@ function App() {
       setFileDetailPageNum(1);
       return;
     }
-
-    // Determine which API to call based on which detail ID is currently set
     const isIndentationView = !!indentationDetailRunId;
     const fetchApi = isIndentationView ? fetchIndentationFileThreeWayView : fetchFileThreeWayView;
 
     async function loadFileThreeWayView() { 
       setIsDetailsLoading(true);
       try {
-        // Pass fileDetailFileName as the unique identifier (e.g., "file_name_1")
         const data = await fetchApi(fileDetailRunId!, fileDetailFileName!, fileDetailPageNum); 
         
         if (data) { 
@@ -165,8 +162,25 @@ function App() {
     loadFileThreeWayView(); 
   }, [fileDetailFileName, fileDetailRunId, fileDetailPageNum, indentationDetailRunId]);
 
+const handleRunDelete = async (runId: string) => {
+    
+    setIsLoading(true);
+    try {
+      await deleteRun(runId);
+      setAllRuns(prevRuns => prevRuns.filter(run => run.Date_Time !== runId));
+      if (state.selectedRunId === runId || detailRunId === runId) {
+        setState(prev => ({ ...prev, selectedRunId: null, showRunSummary: false, currentView: 'finalSummary' }));
+        setDetailRunId(null);
+      }
+    } catch (error) {
+      console.error('Failed to delete run:', error);
+    } finally {
+      setIsLoading(false); 
+    }
+  };
+
   if (isDetailsLoading) {
-    return <Loader />; // Renders ONLY the loader when loading
+    return <Loader />; 
   }
 
   return (
@@ -196,6 +210,7 @@ function App() {
         fileDetailPageNum={fileDetailPageNum}
         setFileDetailPageNum={setFileDetailPageNum}
         fileDetailRunId={fileDetailRunId}
+        onRunDelete={handleRunDelete}
       />
     </div>
   );

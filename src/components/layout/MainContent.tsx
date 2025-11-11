@@ -24,6 +24,7 @@ interface MainContentProps {
   setFileDetailRunId: (runId: string | null) => void;
   fileDetailPageNum: number;
   setFileDetailPageNum: (pageNum: number) => void;
+  onRunDelete: (runId: string) => Promise<void>;
 }
 
 export function MainContent({
@@ -44,6 +45,7 @@ export function MainContent({
   setFileDetailRunId,
   fileDetailPageNum,
   setFileDetailPageNum,
+  onRunDelete,
 }: MainContentProps) {
 
   const handleRunDetailsClick = (runId: string) => {
@@ -128,7 +130,7 @@ export function MainContent({
         <AnimatePresence mode="sync">
           {state.currentView === 'finalSummary' && state.showFinalSummary && (
             <div className="content-section">
-              <AllRunsTable runs={allRuns} onRunClick={(runId) => setDetailRunId(runId)} />
+              <AllRunsTable runs={allRuns} onRunClick={(runId) => setDetailRunId(runId) } onRunDelete={onRunDelete}/>
             </div>
           )}
 

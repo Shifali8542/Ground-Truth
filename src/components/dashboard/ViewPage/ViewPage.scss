@@ -12,6 +12,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 4px 10px;
+      height: 50px;
 
       .header-title-section {
         display: flex;
@@ -20,7 +22,7 @@
         flex-grow: 1;
 
         .header-title {
-          font-size: 1.5rem;
+          font-size: 0.9rem;
           font-weight: 600;
           color: var(--foreground);
         }
@@ -102,9 +104,9 @@ button[variant="success"] {
   .table-wrapper {
     max-height: calc(100vh - 200px);
     overflow-x: auto;
-  max-width: 100%;
-  display: block;
-  white-space: nowrap;
+    max-width: 100%;
+    display: block;
+    white-space: nowrap;
   }
 
   .comparison-row {

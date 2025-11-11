@@ -359,8 +359,8 @@ export function FileThreeWayView({ data, onClose, onPageChange, onSave }: FileTh
       {/* Main Comparison Area */}
       <div className="comparison-grid" style={{ gridTemplateColumns: gridTemplate }}>
         {showJson && <JsonDisplay content={comparisonData} onMatchChange={handleMatchChange} />}
-        {showPdf && <PdfDisplay base64={data.pdf_view_base64} />}
         {showHtml && <HtmlDisplay htmlContent={data.html_view_content} />}
+        {showPdf && <PdfDisplay base64={data.pdf_view_base64} />}
       </div>
     </motion.div>
   );
