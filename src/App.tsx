@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Sidebar } from './components/layout/Sidebar';
 import { MainContent } from './components/layout/MainContent';
-import { fetchAllRuns, fetchIndentationSummary, fetchRunDetailPage, fetchIndentationDetailPage, fetchFileThreeWayView, fetchIndentationFileThreeWayView, deleteRun  } from './api';
+import { fetchAllRuns, fetchIndentationSummary, fetchRunDetailPage, fetchIndentationDetailPage, fetchFileThreeWayView, fetchIndentationFileThreeWayView, deleteRun } from './api';
 import type { SidebarState, ComparisonRun, IndentationSummaryData, RunDetailPageResult } from './types';
 import Loader from '././components/ui/loader';
 
@@ -15,7 +15,7 @@ function App() {
     selectedFileSuffix: null,
     showFinalSummary: true,
     showIndentationResult: false,
-    showRunSummary: false, 
+    showRunSummary: false,
     showFileDiff: false,
   });
 
@@ -60,7 +60,7 @@ function App() {
     loadRuns();
   }, []);
 
- useEffect(() => {
+  useEffect(() => {
     if (state.showIndentationResult) {
       setState(prev => ({ ...prev, currentView: 'indentationResult' }));
     } else if (state.showRunSummary && state.selectedRunId) {
@@ -87,12 +87,12 @@ function App() {
       try {
         const details = await fetchRunDetailPage(detailRunId!);
         setRunDetailsData(details);
-        setState(prev => ({ ...prev, currentView: 'runDetails' })); 
+        setState(prev => ({ ...prev, currentView: 'runDetails' }));
       } catch (error) {
         console.error('Failed to fetch run detail page:', error);
         setDetailRunId(null);
         setState(prev => ({ ...prev, currentView: 'finalSummary' }));
-        } finally {
+      } finally {
         setIsDetailsLoading(false);
       }
     }
@@ -119,7 +119,7 @@ function App() {
         console.error('Failed to fetch indentation detail page:', error);
         setIndentationDetailRunId(null);
         setState(prev => ({ ...prev, currentView: 'indentationResult' }));
-        } finally {
+      } finally {
         setIsDetailsLoading(false);
       }
     }
@@ -136,34 +136,37 @@ function App() {
     const isIndentationView = !!indentationDetailRunId;
     const fetchApi = isIndentationView ? fetchIndentationFileThreeWayView : fetchFileThreeWayView;
 
-    async function loadFileThreeWayView() { 
+    async function loadFileThreeWayView() {
       setIsDetailsLoading(true);
       try {
-        const data = await fetchApi(fileDetailRunId!, fileDetailFileName!, fileDetailPageNum); 
-        
-        if (data) { 
-            setFileDetailData(data);
+        const data = await fetchApi(fileDetailRunId!, fileDetailFileName!, fileDetailPageNum);
+
+        if (data) {
+          setFileDetailData(data);
+          if (data.pagination && data.pagination.currentPage !== fileDetailPageNum) {
+            setFileDetailPageNum(data.pagination.currentPage);
+          }
         } else {
-            console.warn('File detail API returned empty data.');
-            throw new Error('Empty data returned.'); 
+          console.warn('File detail API returned empty data.');
+          throw new Error('Empty data returned.');
         }
       } catch (error) {
         console.error('Failed to fetch file three-way view, resetting view:', error);
-        setFileDetailData(null); 
-        setFileDetailFileName(null); 
+        setFileDetailData(null);
+        setFileDetailFileName(null);
         setFileDetailRunId(null);
         setFileDetailPageNum(1);
-        alert("Error loading file details. Please check the server."); 
-        } finally {
+        alert("Error loading file details. Please check the server.");
+      } finally {
         setIsDetailsLoading(false);
       }
     }
 
-    loadFileThreeWayView(); 
+    loadFileThreeWayView();
   }, [fileDetailFileName, fileDetailRunId, fileDetailPageNum, indentationDetailRunId]);
 
-const handleRunDelete = async (runId: string) => {
-    
+  const handleRunDelete = async (runId: string) => {
+
     setIsLoading(true);
     try {
       await deleteRun(runId);
@@ -175,12 +178,12 @@ const handleRunDelete = async (runId: string) => {
     } catch (error) {
       console.error('Failed to delete run:', error);
     } finally {
-      setIsLoading(false); 
+      setIsLoading(false);
     }
   };
 
   if (isDetailsLoading) {
-    return <Loader />; 
+    return <Loader />;
   }
 
   return (

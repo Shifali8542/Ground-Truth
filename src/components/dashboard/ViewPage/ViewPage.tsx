@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '../../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
@@ -15,7 +15,12 @@ interface ThreeWayViewData {
   comparison_data: any[];
   pdf_view_base64: string;
   html_view_content: string;
-  total_pages: number;
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    prevFile: string | null;
+    nextFile: string | null;
+  }
   Run_Id?: string;
 }
 
@@ -146,24 +151,49 @@ const JsonGTTable = ({ data, onMatchChange }: { data: any[], onMatchChange: (row
 };
 
 export function FileThreeWayView({ data, onClose, onPageChange, onSave }: FileThreeWayViewProps) {
-  const [currentPage, setCurrentPage] = useState(Number(data.Page_Num) || 1);
+  const currentPage = data.pagination.currentPage || 1;
+  const totalPages = data.pagination.totalPages || 1;
   const [showJson, setShowJson] = useState(true);
   const [showPdf, setShowPdf] = useState(true);
   const [showHtml, setShowHtml] = useState(true);
   const [showControls, setShowControls] = useState(false);
+  const viewControlsRef = useRef<HTMLDivElement>(null);
   const [comparisonData, setComparisonData] = useState(data.comparison_data);
   const [hasChanges, setHasChanges] = useState(false);
-  const totalPages = data.total_pages || 1;
   const fileName = data.File_Name || 'File Details';
+
+  // ADDED: Logic to close view controls when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (viewControlsRef.current && !viewControlsRef.current.contains(event.target as Node)) {
+        setShowControls(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [viewControlsRef]);
 
   // Update local state when external 'data' prop changes
   useEffect(() => {
     setComparisonData(data.comparison_data);
-    if (Number(data.Page_Num) !== currentPage) {
-      setCurrentPage(Number(data.Page_Num) || 1);
-    }
     setHasChanges(false);
-  }, [data.comparison_data, data.Page_Num]);
+  }, [data.comparison_data, data.Page_Num, data.pagination.currentPage]);
+
+  // Logic to close view controls when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (viewControlsRef.current && !viewControlsRef.current.contains(event.target as Node)) {
+        setShowControls(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [viewControlsRef]);
 
 
   // Handler to update the match status in the local state
@@ -320,7 +350,7 @@ export function FileThreeWayView({ data, onClose, onPageChange, onSave }: FileTh
             </Button>
 
             {/* Centralized Visibility Control Button */}
-            <div className="relative">
+            <div className="relative" ref={viewControlsRef}>
               <Button
                 onClick={() => setShowControls(!showControls)}
                 variant="outline"

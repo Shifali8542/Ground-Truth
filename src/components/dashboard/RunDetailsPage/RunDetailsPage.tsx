@@ -311,7 +311,6 @@ export function RunDetailsPage({ data, runId, onGoBack, state, onViewFileDetails
                               size="sm"
                               onClick={() => {
                                 const uniqueFileName = `${item.File_Name}_${item.Page_Num}`;
-                                // UPDATE: Pass the initial page number (1)
                                 onViewFileDetails(uniqueFileName, runId!, 1);
                               }}
                             >

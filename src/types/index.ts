@@ -49,6 +49,12 @@ export interface RunDetailPageResult {
   superscript_matches: number;
   superscript_match_percentage: number;
 }
+export interface PaginationData {
+  currentPage: number;
+  totalPages: number;
+  prevFile: string | null;
+  nextFile: string | null;
+}
 
 export interface SidebarState {
   currentView: 'finalSummary' | 'runSummary' | 'fileDiff' | 'indentationResult' | 'runDetails'; 
