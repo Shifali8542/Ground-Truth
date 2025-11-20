@@ -57,7 +57,7 @@ export interface PaginationData {
 }
 
 export interface SidebarState {
-  currentView: 'finalSummary' | 'runSummary' | 'fileDiff' | 'indentationResult' | 'runDetails'; 
+  currentView: 'finalSummary' | 'runSummary' | 'fileDiff' | 'indentationResult' | 'runDetails' | 'jsonResult'; 
   columnToggle: 'all' | 'superscript' | 'font_info';
   selectedRunId: string | null;
   selectedFileName: string | null;
@@ -66,4 +66,5 @@ export interface SidebarState {
   showIndentationResult: boolean;
   showRunSummary: boolean;  
   showFileDiff: boolean;
+  showJsonResult: boolean;
 }

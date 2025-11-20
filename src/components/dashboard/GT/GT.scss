@@ -1,0 +1,120 @@
+// components/dashboard/GT/GT.scss
+
+.gt-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.gt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 3rem;
+}
+
+.gt-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: hsl(var(--foreground));
+}
+
+.gt-dropdown-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.custom-select-container {
+    position: relative;
+    width: 450px; /* Adjust width as necessary */
+    min-width: 300px;
+    z-index: 50; /* Ensure dropdown is above other content */
+}
+
+.select-display-box {
+    display: flex;
+    align-items: center;
+    height: 38px;
+    border: 1px solid hsl(var(--border));
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    background-color: hsl(var(--background));
+    font-size: 0.875rem;
+}
+
+.select-data-label {
+    font-weight: 600;
+    margin-right: 0.5rem;
+    color: hsl(var(--foreground));
+}
+
+.select-value-text {
+    flex-grow: 1;
+    color: hsl(var(--muted-foreground));
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.select-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: 6px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 4px;
+    padding: 8px 0;
+}
+
+
+.file-list-scroll {
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.list-item {
+    display: block; /* Use block display for full width */
+    padding: 8px 12px; /* Add horizontal padding back */
+    border-radius: 0; /* No radius on inner items */
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: background-color 0.15s;
+    border-bottom: 1px solid hsl(var(--border));
+    color: hsl(var(--foreground)); /* Ensure text color is set */
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background-color: hsl(var(--muted));
+    }
+}
+
+.list-item.selected {
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+}
+
+.file-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+
+.gt-json-viewer {
+  background-color: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow: auto;
+  max-height: 70vh;
+}

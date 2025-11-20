@@ -1,0 +1,22 @@
+.pdf-nav-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f9fafb;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
+
+  .pdf-nav-left,
+  .pdf-nav-center,
+  .pdf-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .page-info,
+  .zoom-info {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+}

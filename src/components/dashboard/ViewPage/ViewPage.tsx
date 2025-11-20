@@ -7,6 +7,14 @@ import { cn } from '../../../lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
 import { Checkbox } from '../../ui/checkbox';
 import './ViewPage.scss';
+import PdfNav from '../../pdfview/PdfNav';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/Page/TextLayer.css';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+
+// Configure pdfjs worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+
 
 // Define a type for the data structure expected from the backend for the 3-way view
 interface ThreeWayViewData {
@@ -249,27 +257,62 @@ export function FileThreeWayView({ data, onClose, onPageChange, onSave }: FileTh
   );
 
   // Custom component for the PDF display area (No changes needed)
-  const PdfDisplay = ({ base64 }: { base64: string }) => (
+ const PdfDisplay = ({ base64 }: { base64: string }) => {
+  const [numPages, setNumPages] = useState<number | null>(null);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [zoom, setZoom] = useState(1.0);
+
+  const handleLoadSuccess = ({ numPages }: { numPages: number }) => {
+    setNumPages(numPages);
+  };
+
+  const handlePrevPage = () => setPageNumber((prev) => Math.max(prev - 1, 1));
+  const handleNextPage = () => setPageNumber((prev) => Math.min(prev + 1, numPages || 1));
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.25, 3));
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.25, 0.5));
+
+  const handleDownload = () => {
+    const link = document.createElement('a');
+    link.href = `data:application/pdf;base64,${base64}`;
+    link.download = 'document.pdf';
+    link.click();
+  };
+
+  const pdfData = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+
+  return (
     <Card className="pdf-view-card">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <div className='flex items-center space-x-2'>
+        <div className="flex items-center space-x-2">
           <FileType2 className="h-4 w-4 text-red-500" />
           <CardTitle className="text-sm font-medium">PDF Page View</CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="p-2 pt-0">
-        <div className="pdf-viewer">
-          <iframe
-            src={`data:application/pdf;base64,${base64}`}
-            width="100%"
-            height="100%"
-            style={{ border: 'none' }}
-            title="PDF View"
-          />
+      <CardContent className="p-0 pt-0">
+        {/* ✅ PDF Navbar Header */}
+        <PdfNav
+          currentPage={pageNumber}
+          totalPages={numPages || 1}
+          onPrevPage={handlePrevPage}
+          onNextPage={handleNextPage}
+          zoomLevel={zoom}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onDownload={handleDownload}
+        />
+
+        {/* ✅ PDF Viewer */}
+        <div className="pdf-viewer overflow-auto flex justify-center bg-gray-50 p-2">
+          <Document file={{ data: pdfData }} onLoadSuccess={handleLoadSuccess}>
+            <Page pageNumber={pageNumber} scale={zoom} width={500 * zoom} />
+          </Document>
         </div>
       </CardContent>
     </Card>
   );
+};
+
+
 
   // Custom component for the HTML display area (No changes needed)
   const HtmlDisplay = ({ htmlContent }: { htmlContent: string }) => (
@@ -314,29 +357,29 @@ export function FileThreeWayView({ data, onClose, onPageChange, onSave }: FileTh
             </div>
           </div>
 
-          <div className="controls-section">
+          {/* <div className="controls-section"> */}
             {/* Page Navigation */}
             <div className="page-navigation flex items-center space-x-2 mr-4">
-              <Button
+              {/* <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handlePageChange(-1)}
                 disabled={currentPage <= 1}
               >
                 Prev Page
-              </Button>
+              </Button> */}
               <span className="text-sm font-medium whitespace-nowrap">
                 Page {currentPage} of {totalPages}
               </span>
-              <Button
+              {/* <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handlePageChange(1)}
                 disabled={currentPage >= totalPages}
               >
                 Next Page
-              </Button>
-            </div>
+              </Button> */}
+            {/* </div> */}
 
             {/* Save Button */}
             <Button

@@ -55,7 +55,7 @@ export function Sidebar({
   };
 
   const handleRunS3Comparison = async () => {
-    if (!selectedGtFolder || !selectedOutputFolder ) return;
+    if (!selectedGtFolder || !selectedOutputFolder) return;
 
     setIsS3Comparing(true);
     try {
@@ -63,7 +63,7 @@ export function Sidebar({
       setIsS3DialogOpen(false);
       setSelectedGtFolder(null);
       setSelectedOutputFolder(null);
-      setChangesDescription('Run from UI'); 
+      setChangesDescription('Run from UI');
       window.location.reload();
     } catch (error) {
       console.error('Failed to run S3 comparison:', error);
@@ -183,7 +183,7 @@ export function Sidebar({
               }
             }}
           >
-           <DialogTrigger asChild>
+            <DialogTrigger asChild>
               <Button className="w-full" size="lg">
                 <Upload className="mr-2 h-5 w-5" />
                 Server Side
@@ -292,6 +292,16 @@ export function Sidebar({
                   }
                 />
                 <Label htmlFor="file-diff">Show Individual File Results</Label>
+              </div>
+              <div className="checkbox-item">
+                <Checkbox
+                  id="json-result"
+                  checked={state.showJsonResult}
+                  onCheckedChange={(checked) =>
+                    onStateChange({ ...state, showJsonResult: !!checked })
+                  }
+                />
+                <Label htmlFor="json-result">JSON Result</Label>
               </div>
             </div>
           </div>

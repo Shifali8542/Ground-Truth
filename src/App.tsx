@@ -6,7 +6,7 @@ import type { SidebarState, ComparisonRun, IndentationSummaryData, RunDetailPage
 import Loader from '././components/ui/loader';
 
 function App() {
-  type View = 'finalSummary' | 'runSummary' | 'indentationResult' | 'runDetails';
+  type View = 'finalSummary' | 'runSummary' |  'fileDiff' |'indentationResult' | 'runDetails' | 'jsonResult';
   const [state, setState] = useState<SidebarState>({
     currentView: 'finalSummary',
     columnToggle: 'all',
@@ -17,6 +17,7 @@ function App() {
     showIndentationResult: false,
     showRunSummary: false,
     showFileDiff: false,
+    showJsonResult: false,
   });
 
   useEffect(() => {
@@ -26,10 +27,12 @@ function App() {
       setState(prev => ({ ...prev, currentView: 'runSummary' }));
     } else if (state.showFileDiff && state.selectedRunId && state.selectedFileName && state.selectedFileSuffix) {
       setState(prev => ({ ...prev, currentView: 'fileDiff' }));
+    } else if (state.showJsonResult) { // <--- ADDED CHECK FOR JSON RESULT
+      setState(prev => ({ ...prev, currentView: 'jsonResult' }));
     } else if (state.showFinalSummary) {
       setState(prev => ({ ...prev, currentView: 'finalSummary' }));
     }
-  }, [state.showFinalSummary, state.showIndentationResult, state.showRunSummary, state.showFileDiff, state.selectedRunId, state.selectedFileName, state.selectedFileSuffix]);
+  }, [state.showFinalSummary, state.showIndentationResult, state.showRunSummary, state.showFileDiff, state.showJsonResult, state.selectedRunId, state.selectedFileName, state.selectedFileSuffix]);
 
   const [allRuns, setAllRuns] = useState<ComparisonRun[]>([]);
   const [indentationResults, setIndentationResults] = useState<IndentationSummaryData[]>([]);

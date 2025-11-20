@@ -1,6 +1,8 @@
 import type { ComparisonRun, IndentationSummaryData, RunDetailPageResult } from './types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.1.18:8000/';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.1.8:8000/';
+const API_BASE_URL_CELLS = import.meta.env.VITE_API_BASE_URL_CELLS || 'http://192.168.1.8:8001/';
+const API_TOKEN = import.meta.env.VITE_AUTH_TOKEN;
 
 // When user Uplaod GT and Output Zip files and click on Run Comparison button then this function will be called
 export async function runNewComparison(gtZip: File, outputZip: File): Promise<{ runId: string }> {
@@ -8,7 +10,7 @@ export async function runNewComparison(gtZip: File, outputZip: File): Promise<{ 
   formData.append('gt_zip', gtZip);
   formData.append('running_zip', outputZip);
 
-  const response = await fetch(`${API_BASE_URL}api/upload-and-compare/`, { 
+  const response = await fetch(`${API_BASE_URL}api/upload-and-compare/`, {
     method: 'POST',
     body: formData,
   });
@@ -87,7 +89,7 @@ export async function fetchIndentationSummary(): Promise<IndentationSummaryData[
   const response = await fetch(`${API_BASE_URL}/api/indent/summary/all_runs/`);
 
   if (!response.ok) {
-    throw new Error('Failed to fetch indentation summary'); 
+    throw new Error('Failed to fetch indentation summary');
   }
 
   return response.json();
@@ -131,7 +133,7 @@ export async function fetchFileThreeWayView(runId: string, fileName: string, pag
 // When any user click for view page in indentation run details page then this function will be called
 export async function fetchIndentationFileThreeWayView(runId: string, fileName: string, pageNum: number): Promise<any> {
   const stemParts = fileName.split('_');
-  const fileStem = stemParts.slice(0, stemParts.length - 1).join('_'); 
+  const fileStem = stemParts.slice(0, stemParts.length - 1).join('_');
   const url = `${API_BASE_URL}api/indent/runs/${runId}/files/${encodeURIComponent(fileStem)}/?page=${pageNum}`;
   const response = await fetch(url);
 
@@ -140,4 +142,50 @@ export async function fetchIndentationFileThreeWayView(runId: string, fileName: 
   }
 
   return response.json();
+}
+
+// New function to fetch the list of files for the table cells dropdown
+export async function fetchTableCellsFileNames(): Promise<string[]> {
+  const url = `${API_BASE_URL_CELLS}backend/get_table_cells`;
+
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  if (API_TOKEN) {
+    headers['Authorization'] = `Token ${API_TOKEN}`;
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify({ load_json: {} }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error('API Error Response:', errorBody);
+    throw new Error(`Failed to fetch table cell file names (Status: ${response.status})`);
+  }
+  const responseData = await response.json();  
+  console.log("DEBUG: Raw get_table_cells response:", responseData);
+  
+  if (responseData.data && Array.isArray(responseData.data.myTableCells)) {
+      const myTableCellsArray = responseData.data.myTableCells;
+      
+      const fileNames = myTableCellsArray.map((item: any) => {
+          // Each item is an object where the key is the file name: { "FileName.pdf": { ...data... } }
+          // Object.keys(item) returns an array of keys (e.g., ["FileName.pdf"])
+          // We take the first element of that array, which is the file name string.
+          const fileNameKey = Object.keys(item)[0]; // <-- Correctly gets the file name key
+          return fileNameKey;
+      }).filter((name: string) => name); // Filter out any empty/null results just in case
+      
+      if (fileNames.length > 0) {
+          return fileNames as string[];
+      }
+  }
+
+  console.error("API returned status 200 but files could not be extracted or the list was empty:", responseData);
+  return [];
 }

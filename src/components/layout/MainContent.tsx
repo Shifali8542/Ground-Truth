@@ -1,14 +1,16 @@
+import * as React from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { AllRunsTable } from '../dashboard/AllRunsTable/AllRunsTable';
 import { IndentationSummaryTable } from '../dashboard/IndentationSummaryTable/IndentationSummaryTable';
 import { RunDetailsPage } from '../dashboard/RunDetailsPage/RunDetailsPage';
 import { FileThreeWayView } from '../dashboard/ViewPage/ViewPage';
+import { GT } from '../dashboard/GT/GT';
 import type { SidebarState, ComparisonRun,IndentationSummaryData, RunDetailPageResult } from '../../types';
 import './MainContent.scss';
 
 interface MainContentProps {
   state: SidebarState;
-  onStateChange: (newState: SidebarState | ((prevState: SidebarState) => SidebarState)) => void;
+ onStateChange: React.Dispatch<React.SetStateAction<SidebarState>>;
   allRuns: ComparisonRun[];
   indentationResults: IndentationSummaryData[];
   isSidebarOpen: boolean;
@@ -145,6 +147,11 @@ export function MainContent({
                 runs={indentationResults}
                 onRunClick={setIndentationDetailRunId}
               />
+            </div>
+          )}
+          {state.currentView === 'jsonResult' && state.showJsonResult && (
+            <div className="content-section">
+              <GT allRuns={allRuns} state={state} />
             </div>
           )}
 
